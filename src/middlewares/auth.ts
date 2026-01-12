@@ -27,11 +27,10 @@ const authUser = (req: AuthenticatedRequest, res: Response, next: NextFunction) 
         }
 
         // Verify and decode token
-        const decoded = jwt.verify(token, jwtSecret) as { _id: mongoose.Types.ObjectId };
-
+        const decoded = jwt.verify(token, jwtSecret) as { id: mongoose.Types.ObjectId };
         // Attach user info to request object
         req.user = {
-            _id: decoded._id
+            _id: decoded.id
         };
 
         next();

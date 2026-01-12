@@ -1,9 +1,9 @@
-import mongoose, { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import { Base } from "./base-interface";
 
 export interface IMessage extends Document, Base {
-    sender: mongoose.Types.ObjectId;
-    receiver: mongoose.Types.ObjectId;
+    sender: Types.ObjectId;
     content: string;
+    chatRoom: Types.ObjectId;
     isRead: boolean;
 }

@@ -4,6 +4,7 @@ import { refreshToken } from "../controllers/user/token";
 import { changePassword, forgotPassword, generateResetToken } from "../controllers/user/password";
 import asyncWrapper from "../utils/async-wrapper";
 import authUser from "../middlewares/auth";
+import { friendRequest } from "../controllers/user/friend-request";
 
 const userRouter = Router();
 
@@ -17,5 +18,8 @@ userRouter.post('/refresh-token', asyncWrapper(refreshToken));
 // forgot password routes
 userRouter.post('/forgot-password', asyncWrapper(generateResetToken));
 userRouter.patch('/forgot-password/:token', asyncWrapper(forgotPassword));
+
+// finding user
+userRouter.post('/find', authUser, asyncWrapper(friendRequest));
 
 export default userRouter;

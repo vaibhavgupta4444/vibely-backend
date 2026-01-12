@@ -7,14 +7,13 @@ const messageSchema = new Schema<IMessage>({
         ref: 'User',
         required: true
     },
-    receiver:{
-        type: Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
     content:{
         type: String,
         required: true
+    },
+    chatRoom:{
+        type: Types.ObjectId,
+        ref: "ChatRoom"
     },
     isRead:{
         type: Boolean,

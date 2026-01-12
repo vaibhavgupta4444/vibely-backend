@@ -6,7 +6,10 @@ import userRouter from "./routes/user-route";
 import dbConnect from "./config/database-connection";
 import cors from "cors"
 import { HttpError } from "./utils/https-error";
-import { io } from "./config/socket-server";
+import { Server } from 'socket.io'
+import socketHandler from "./config/socket-handler";
+import http from "http";
+import chatRouter from "./routes/chat-route";
 
 const app: Application = express();
 const PORT = process.env.PORT;
@@ -14,16 +17,29 @@ const PORT = process.env.PORT;
 dbConnect();
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+const server = http.createServer(app);
+
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+socketHandler(io);
 
 app.use("/v1/user", userRouter);
+app.use("/v1/chat-room", chatRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.send("Working");
-});
-
-io.on('connection', (socket) => {
-  console.log('a user connected');
 });
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -77,6 +93,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`server is running on port ${PORT}`);
 });

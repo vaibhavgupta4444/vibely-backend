@@ -6,6 +6,7 @@ import userRouter from "./routes/user-route";
 import dbConnect from "./config/database-connection";
 import cors from "cors"
 import { HttpError } from "./utils/https-error";
+import { io } from "./config/socket-server";
 
 const app: Application = express();
 const PORT = process.env.PORT;
@@ -19,6 +20,10 @@ app.use("/v1/user", userRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.send("Working");
+});
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
 });
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

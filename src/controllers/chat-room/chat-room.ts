@@ -7,7 +7,7 @@ export const getChatRooms = async (req: AuthenticatedRequest, res: Response) => 
     const userId = req.user?._id;
     if (!userId) return res.status(401).json({ message: "Unauthorized Access" });
 
-    const chatRooms = await ChatRoom.find({ participants: userId }).populate('participants', 'firstName lastName email');
+    const chatRooms = await ChatRoom.find({ users: userId }).populate('users', 'firstName lastName email');
 
     const chatRoomsWithLatest = await Promise.all(
       chatRooms.map(async (room) => {
@@ -47,4 +47,56 @@ export const getChatRooms = async (req: AuthenticatedRequest, res: Response) => 
     );
 
     res.json({ chatRooms: chatRoomsWithLatest });
+}
+
+export const getMessages = async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?._id;
+    const { chatRoomId } = req.params;
+
+    if (!userId) return res.status(401).json({ message: "Unauthorized Access" });
+
+    // Verify user is part of the chat room
+    const chatRoom = await ChatRoom.findById(chatRoomId);
+    if (!chatRoom) {
+        return res.status(404).json({ message: "Chat room not found" });
+    }
+
+    const isUserInRoom = chatRoom.users.some(
+        (user) => user.toString() === userId.toString()
+    );
+
+    if (!isUserInRoom) {
+        return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Get all messages for this chat room
+    const messages = await Message.find({ chatRoom: chatRoomId })
+        .populate('sender', '_id email firstName lastName')
+        .sort({ createdAt: 1 })
+        .lean();
+
+    // Format messages
+    const formattedMessages = messages.map((msg) => ({
+        _id: msg._id,
+        sender: {
+            _id: (msg.sender as any)._id,
+            email: (msg.sender as any).email,
+            name: (msg.sender as any).lastName
+                    ? `${(msg.sender as any).firstName} ${(msg.sender as any).lastName}`
+                    : (msg.sender as any).firstName
+
+        },
+        receiver: {
+            _id: chatRoom.users.find((u) => u.toString() !== (msg.sender as any)._id.toString()),
+            email: "",
+            name: (msg.sender as any).lastName
+                    ? `${(msg.sender as any).firstName} ${(msg.sender as any).lastName}`
+                    : (msg.sender as any).firstName
+        },
+        content: msg.content,
+        isRead: msg.isRead,
+        createdAt: msg.createdAt,
+    }));
+
+    res.json({ messages: formattedMessages });
 }
